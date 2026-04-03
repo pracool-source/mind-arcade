@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ZEN SMASH – Stress Buster Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100%;background:#0a0a0f;color:#fff;font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+
+/* ── SCREEN MANAGER ── */
+.screen{display:none;min-height:100vh;width:100%;}
+.screen.active{display:flex;}
+
+/* ── PARTICLES BG ── */
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;opacity:0;animation:floatUp linear infinite;}
+@keyframes floatUp{0%{transform:translateY(100vh) scale(0);opacity:0;}10%{opacity:.6;}90%{opacity:.2;}100%{transform:translateY(-100px) scale(1.5);opacity:0;}}
+
+/* ── CARD BASE ── */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;backdrop-filter:blur(10px);}
+
+/* ── INTRO SCREEN ── */
+#introScreen{flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;position:relative;z-index:1;}
+.logo-zone{margin-bottom:36px;animation:breathe 3s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+.game-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,15vw,9rem);letter-spacing:6px;line-height:1;background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.game-sub{font-size:1.1rem;font-weight:300;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;margin-bottom:48px;}
+.tagline{font-size:clamp(1rem,2.5vw,1.3rem);color:rgba(255,255,255,.7);max-width:500px;line-height:1.7;margin-bottom:48px;}
+
+/* ── HOW TO PLAY ── */
+.instructions-box{max-width:680px;width:100%;padding:32px;margin-bottom:40px;text-align:left;}
+.inst-title{font-size:.7rem;letter-spacing:4px;text-transform:uppercase;color:#a78bfa;margin-bottom:20px;}
+.inst-steps{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:560px){.inst-steps{grid-template-columns:1fr;}}
+.inst-step{display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border-radius:14px;border:1px solid rgba(255,255,255,.06);}
+.inst-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;}
+.inst-text strong{display:block;font-size:.9rem;margin-bottom:4px;}
+.inst-text span{font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.5;}
+
+/* ── MOOD SELECTOR ── */
+.mood-label{font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;}
+.moods{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:40px;}
+.mood-btn{padding:10px 22px;border-radius:50px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:.85rem;transition:all .25s;}
+.mood-btn:hover,.mood-btn.selected{background:rgba(167,139,250,.2);border-color:#a78bfa;color:#fff;}
+.mood-btn.selected{box-shadow:0 0 20px rgba(167,139,250,.3);}
+
+/* ── START BTN ── */
+.start-btn{padding:18px 60px;border-radius:50px;background:linear-gradient(135deg,#a78bfa,#60a5fa);border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:4px;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 32px rgba(167,139,250,.4);}
+.start-btn:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 16px 48px rgba(167,139,250,.6);}
+.start-btn:active{transform:scale(.97);}
+
+/* ── GAME SCREEN ── */
+#gameScreen{flex-direction:column;align-items:stretch;padding:0;position:relative;z-index:1;min-height:100vh;}
+
+/* ── HUD ── */
+.hud{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);}
+.hud-left,.hud-right{display:flex;gap:20px;align-items:center;}
+.hud-stat{text-align:center;}
+.hud-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1;color:#fff;}
+.hud-lbl{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:2px;}
+.hud-center{text-align:center;}
+.stress-bar-wrap{width:160px;}
+.stress-bar-lbl{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px;text-align:center;}
+.stress-bar{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;}
+.stress-fill{height:100%;background:linear-gradient(90deg,#34d399,#a78bfa,#f87171);border-radius:4px;transition:width .4s ease;}
+.combo-badge{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#fbbf24;letter-spacing:2px;min-width:80px;text-align:right;}
+
+/* ── ARENA ── */
+.arena-wrap{flex:1;position:relative;overflow:hidden;cursor:crosshair;}
+#arena{width:100%;height:calc(100vh - 80px);position:relative;overflow:hidden;}
+
+/* ── BUBBLES / TARGETS ── */
+.bubble{
+  position:absolute;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:700;
+  user-select:none;-webkit-user-select:none;
+  transition:transform .1s;
+  animation:bubbleFloat 0s linear infinite;
+  will-change:transform;
+}
+.bubble:hover{transform:scale(1.1);}
+.bubble:active{transform:scale(.85);}
+.bubble.type-work{background:radial-gradient(circle at 35% 35%,#f87171,#dc2626);box-shadow:0 0 20px rgba(248,113,113,.4);}
+.bubble.type-anxiety{background:radial-gradient(circle at 35% 35%,#fb923c,#ea580c);box-shadow:0 0 20px rgba(251,146,60,.4);}
+.bubble.type-anger{background:radial-gradient(circle at 35% 35%,#f472b6,#db2777);box-shadow:0 0 20px rgba(244,114,182,.4);}
+.bubble.type-sadness{background:radial-gradient(circle at 35% 35%,#60a5fa,#2563eb);box-shadow:0 0 20px rgba(96,165,250,.4);}
+.bubble.type-chaos{background:radial-gradient(circle at 35% 35%,#a78bfa,#7c3aed);box-shadow:0 0 20px rgba(167,139,250,.4);}
+.bubble.type-bonus{background:radial-gradient(circle at 35% 35%,#34d399,#059669);box-shadow:0 0 30px rgba(52,211,153,.6);animation:bonusPulse 1s ease-in-out infinite!important;}
+@keyframes bonusPulse{0%,100%{box-shadow:0 0 20px rgba(52,211,153,.6);}50%{box-shadow:0 0 50px rgba(52,211,153,1);}}
+
+.bubble-label{font-size:.65rem;text-align:center;line-height:1.3;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.6);padding:4px;}
+
+/* ── EXPLOSION ── */
+.explosion{position:absolute;pointer-events:none;border-radius:50%;animation:explode .5s ease-out forwards;}
+@keyframes explode{0%{transform:scale(0);opacity:1;}100%{transform:scale(3);opacity:0;}}
+.score-pop{position:absolute;pointer-events:none;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;animation:scorePop .8s ease-out forwards;}
+@keyframes scorePop{0%{transform:translateY(0) scale(1);opacity:1;}100%{transform:translateY(-80px) scale(1.4);opacity:0;}}
+
+/* ── ZEN CLOUD (healer) ── */
+.zen-cloud{position:absolute;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(167,139,250,.6));box-shadow:0 0 40px rgba(255,255,255,.6);animation:zenFloat 2s ease-out forwards;}
+@keyframes zenFloat{0%{transform:scale(0) rotate(0deg);opacity:0;}20%{opacity:1;}80%{opacity:.8;}100%{transform:scale(4) rotate(180deg);opacity:0;}}
+
+/* ── SHAKE FEEDBACK ── */
+@keyframes screenShake{0%,100%{transform:translate(0);}20%{transform:translate(-8px,4px);}40%{transform:translate(8px,-4px);}60%{transform:translate(-5px,2px);}80%{transform:translate(5px,-2px);}}
+.shake{animation:screenShake .4s ease;}
+
+/* ── TIMER PULSE ── */
+@keyframes timerWarn{0%,100%{color:#fff;}50%{color:#f87171;}}
+
+/* ── PAUSE OVERLAY ── */
+.pause-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(20px);}
+.pause-overlay.visible{display:flex;}
+.pause-card{text-align:center;padding:48px;border-radius:24px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);}
+.pause-title{font-family:'Bebas Neue',sans-serif;font-size:4rem;letter-spacing:6px;margin-bottom:16px;color:#a78bfa;}
+.pause-sub{color:rgba(255,255,255,.5);margin-bottom:32px;}
+.pause-btn{padding:14px 40px;border-radius:50px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Space Grotesk',sans-serif;font-size:.95rem;cursor:pointer;transition:all .2s;margin:0 8px;}
+.pause-btn:hover{background:rgba(167,139,250,.3);border-color:#a78bfa;}
+
+/* ── RESULTS SCREEN ── */
+#resultsScreen{flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;position:relative;z-index:1;}
+.result-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,10vw,6rem);letter-spacing:4px;margin-bottom:8px;}
+.result-sub{font-size:1rem;color:rgba(255,255,255,.5);margin-bottom:40px;letter-spacing:2px;text-transform:uppercase;}
+.result-grade{font-family:'Bebas Neue',sans-serif;font-size:7rem;line-height:1;margin-bottom:8px;animation:gradePop .5s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes gradePop{0%{transform:scale(0) rotate(-20deg);opacity:0;}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+.result-grade-label{font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:40px;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:600px;width:100%;margin-bottom:40px;}
+@media(max-width:480px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+.stat-card{padding:20px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+.stat-card-val{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1;}
+.stat-card-lbl{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:4px;}
+
+.stress-report{max-width:600px;width:100%;padding:28px;margin-bottom:40px;text-align:left;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+.report-title{font-size:.7rem;letter-spacing:4px;text-transform:uppercase;color:#a78bfa;margin-bottom:20px;}
+.report-bars{display:flex;flex-direction:column;gap:14px;}
+.report-bar-item{display:flex;align-items:center;gap:12px;}
+.report-bar-label{font-size:.82rem;width:80px;flex-shrink:0;color:rgba(255,255,255,.6);}
+.report-bar-track{flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+.report-bar-fill{height:100%;border-radius:4px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.report-bar-count{font-size:.8rem;width:28px;text-align:right;color:rgba(255,255,255,.4);}
+
+.motivation{max-width:560px;font-size:1.1rem;line-height:1.8;color:rgba(255,255,255,.7);margin-bottom:40px;font-style:italic;}
+
+.result-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.play-again-btn{padding:16px 48px;border-radius:50px;background:linear-gradient(135deg,#a78bfa,#60a5fa);border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:4px;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 32px rgba(167,139,250,.4);}
+.play-again-btn:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(167,139,250,.6);}
+.menu-btn{padding:16px 36px;border-radius:50px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.7);font-family:'Space Grotesk',sans-serif;font-size:.95rem;cursor:pointer;transition:all .2s;}
+.menu-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+
+/* ── LEVEL UP TOAST ── */
+.level-toast{position:fixed;top:100px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#a78bfa,#60a5fa);padding:12px 32px;border-radius:50px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:4px;z-index:500;opacity:0;pointer-events:none;transition:all .4s;}
+.level-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .hud{padding:10px 14px;flex-wrap:wrap;gap:8px;}
+  .hud-stat .hud-val{font-size:1.3rem;}
+  .stress-bar-wrap{width:100px;}
+  .combo-badge{font-size:1rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- BG PARTICLES -->
+<div id="particles"></div>
+
+<!-- ════════════════════════════════
+     INTRO SCREEN
+════════════════════════════════ -->
+<div class="screen active" id="introScreen">
+  <div class="logo-zone">
+    <div class="game-title">ZEN SMASH</div>
+    <div class="game-sub">The Ultimate Stress Buster</div>
+  </div>
+  <p class="tagline">Your stress isn't going anywhere on its own — so smash it. Literally. Pop every stress bubble before time runs out and watch your anxiety dissolve into thin air.</p>
+
+  <div class="card instructions-box">
+    <div class="inst-title">⚡ How To Play</div>
+    <div class="inst-steps">
+      <div class="inst-step">
+        <div class="inst-num">1</div>
+        <div class="inst-text"><strong>Pop the Stress Bubbles</strong><span>Coloured bubbles drift across the screen — each one is a stress category. Tap or click to smash them and earn points.</span></div>
+      </div>
+      <div class="inst-step">
+        <div class="inst-num">2</div>
+        <div class="inst-text"><strong>Build Your Combo</strong><span>Pop 5 bubbles in a row without missing = COMBO STREAK. Your score multiplier grows. Keep the chain going!</span></div>
+      </div>
+      <div class="inst-step">
+        <div class="inst-num">3</div>
+        <div class="inst-text"><strong>Catch the Green Gem</strong><span>Rare green bubbles appear briefly — they double your points AND lower your stress meter instantly. Don't miss them!</span></div>
+      </div>
+      <div class="inst-step">
+        <div class="inst-num">4</div>
+        <div class="inst-text"><strong>Watch Your Stress Bar</strong><span>Bubbles that escape (pop off-screen) raise your stress meter. If it fills up: GAME OVER. Stay sharp!</span></div>
+      </div>
+      <div class="inst-step">
+        <div class="inst-num">5</div>
+        <div class="inst-text"><strong>Levels Get Harder</strong><span>Every 15 seconds the game speeds up. More bubbles, faster drift. How long can you last in Zen Zone?</span></div>
+      </div>
+      <div class="inst-step">
+        <div class="inst-num">6</div>
+        <div class="inst-text"><strong>Your Stress Report</strong><span>At the end, see which stress type you smashed the most — and get a personalised well-being message.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mood-label">What's stressing you today?</div>
+  <div class="moods">
+    <button class="mood-btn" data-mood="work">💼 Work</button>
+    <button class="mood-btn" data-mood="relationships">💔 Relationships</button>
+    <button class="mood-btn" data-mood="health">🏥 Health</button>
+    <button class="mood-btn" data-mood="money">💸 Money</button>
+    <button class="mood-btn" data-mood="everything">🌪️ Everything</button>
+    <button class="mood-btn" data-mood="nothing">😌 Nothing, just vibing</button>
+  </div>
+
+  <button class="start-btn" id="startBtn">SMASH YOUR STRESS →</button>
+</div>
+
+<!-- ════════════════════════════════
+     GAME SCREEN
+════════════════════════════════ -->
+<div class="screen" id="gameScreen">
+  <!-- HUD -->
+  <div class="hud" id="hud">
+    <div class="hud-left">
+      <div class="hud-stat">
+        <div class="hud-val" id="scoreDisplay">0</div>
+        <div class="hud-lbl">Score</div>
+      </div>
+      <div class="hud-stat">
+        <div class="hud-val" id="levelDisplay">1</div>
+        <div class="hud-lbl">Level</div>
+      </div>
+    </div>
+    <div class="hud-center">
+      <div class="stress-bar-wrap">
+        <div class="stress-bar-lbl">Stress Meter</div>
+        <div class="stress-bar"><div class="stress-fill" id="stressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-stat" style="text-align:center;">
+        <div class="hud-val" id="timerDisplay">60</div>
+        <div class="hud-lbl">Seconds</div>
+      </div>
+      <div class="combo-badge" id="comboDisplay"></div>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <div id="arena"></div>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div class="pause-overlay" id="pauseOverlay">
+  <div class="pause-card">
+    <div class="pause-title">PAUSED</div>
+    <p class="pause-sub">Breathe in... breathe out...</p>
+    <button class="pause-btn" id="resumeBtn">▶ Resume</button>
+    <button class="pause-btn" id="quitBtn">✕ Quit</button>
+  </div>
+</div>
+
+<!-- LEVEL TOAST -->
+<div class="level-toast" id="levelToast">LEVEL UP!</div>
+
+<!-- ════════════════════════════════
+     RESULTS SCREEN
+════════════════════════════════ -->
+<div class="screen" id="resultsScreen">
+  <div class="result-title" id="resultTitle">STRESS SMASHED</div>
+  <div class="result-sub" id="resultSub">Session Complete</div>
+  <div class="result-grade" id="resultGrade">A+</div>
+  <div class="result-grade-label" id="resultGradeLabel">Zen Master</div>
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="stress-report" id="stressReport">
+    <div class="report-title">🧠 Your Stress Breakdown</div>
+    <div class="report-bars" id="reportBars"></div>
+  </div>
+
+  <p class="motivation" id="motivationMsg"></p>
+
+  <div class="result-btns">
+    <button class="play-again-btn" id="playAgainBtn">PLAY AGAIN</button>
+    <button class="menu-btn" id="menuBtn">Back to Menu</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//   PARTICLES
+// ═══════════════════════════════════
+(function spawnParticles(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*6+2;
+    const colors=['#a78bfa','#60a5fa','#34d399','#f87171','#fbbf24'];
+    p.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*10}s;`;
+    c.appendChild(p);
+  }
+})();
+
+// ═══════════════════════════════════
+//   GAME STATE
+// ═══════════════════════════════════
+const BUBBLE_TYPES=[
+  {type:'work',label:'DEADLINE',emoji:'💼',points:10},
+  {type:'anxiety',label:'WORRY',emoji:'😰',points:12},
+  {type:'anger',label:'RAGE',emoji:'😤',points:15},
+  {type:'sadness',label:'GLOOM',emoji:'😔',points:10},
+  {type:'chaos',label:'CHAOS',emoji:'🌀',points:20},
+];
+
+let state={
+  score:0,level:1,timer:60,stress:0,
+  combo:0,maxCombo:0,
+  popped:0,missed:0,bonusCaught:0,
+  typeCounts:{work:0,anxiety:0,anger:0,sadness:0,chaos:0,bonus:0},
+  multiplier:1,running:false,paused:false,
+  selectedMood:null,
+  bubbles:[],
+  gameLoop:null,timerLoop:null,spawnLoop:null,levelLoop:null,
+};
+
+// ═══════════════════════════════════
+//   UI HELPERS
+// ═══════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Mood selection
+document.querySelectorAll('.mood-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.mood-btn').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected');
+    state.selectedMood=b.dataset.mood;
+  });
+});
+
+// ═══════════════════════════════════
+//   BUBBLE SYSTEM
+// ═══════════════════════════════════
+let bubbleId=0;
+function spawnBubble(){
+  const arena=document.getElementById('arena');
+  const W=arena.clientWidth, H=arena.clientHeight;
+  const isBonus=Math.random()<0.08;
+  const typeData=isBonus?{type:'bonus',label:'ZEN',emoji:'✨',points:40}:BUBBLE_TYPES[Math.floor(Math.random()*BUBBLE_TYPES.length)];
+  const size=isBonus?64:Math.random()*30+48;
+  const id='b'+bubbleId++;
+
+  const el=document.createElement('div');
+  el.className=`bubble type-${typeData.type}`;
+  el.id=id;
+  const x=Math.random()*(W-size);
+  const y=-size-10;
+  el.style.cssText=`width:${size}px;height:${size}px;left:${x}px;top:${y}px;font-size:${size*0.3}px;`;
+
+  const inner=document.createElement('div');
+  inner.className='bubble-label';
+  inner.textContent=typeData.emoji+'\n'+typeData.label;
+  inner.style.fontSize=`${Math.max(size*0.14,8)}px`;
+  el.appendChild(inner);
+
+  const speed=(80+state.level*20)*(isBonus?1.4:1);
+  let vy=speed, vx=(Math.random()-0.5)*40;
+  let curY=y, curX=x;
+  const maxWobble=30, wobbleSpeed=1+Math.random();
+  let wobble=0, wobbleDir=1;
+
+  el.addEventListener('click',()=>popBubble(id,typeData,size,el));
+  el.addEventListener('touchstart',(e)=>{e.preventDefault();popBubble(id,typeData,size,el);},{passive:false});
+
+  arena.appendChild(el);
+
+  const bObj={id,el,typeData,size,vy,vx,curX,curY,maxWobble,wobbleSpeed,wobble,wobbleDir,alive:true};
+  state.bubbles.push(bObj);
+}
+
+function popBubble(id,typeData,size,el){
+  const idx=state.bubbles.findIndex(b=>b.id===id);
+  if(idx===-1)return;
+  const b=state.bubbles[idx];
+  if(!b.alive)return;
+  b.alive=false;
+  state.bubbles.splice(idx,1);
+
+  // Score
+  state.combo++;
+  if(state.combo>state.maxCombo)state.maxCombo=state.combo;
+  if(state.combo>=5)state.multiplier=Math.min(state.combo/5+1,4);
+  const pts=Math.round(typeData.points*state.multiplier);
+  state.score+=pts;
+  state.popped++;
+  state.typeCounts[typeData.type]=(state.typeCounts[typeData.type]||0)+1;
+
+  if(typeData.type==='bonus'){
+    state.bonusCaught++;
+    state.stress=Math.max(0,state.stress-15);
+    updateStressBar();
+    showZenCloud(b.curX,b.curY,size);
+  }
+
+  // Explosion
+  showExplosion(b.curX,b.curY,size,typeData.type);
+  showScorePop(b.curX,b.curY,'+'+pts,typeData.type);
+
+  el.remove();
+  updateHUD();
+}
+
+function missedBubble(b){
+  state.combo=0;state.multiplier=1;
+  state.missed++;
+  state.stress=Math.min(100,state.stress+(typeData_miss_amount(b.typeData.type)));
+  if(state.stress>=100)endGame(true);
+  else updateStressBar();
+  updateHUD();
+}
+
+function typeData_miss_amount(t){return t==='bonus'?0:t==='chaos'?18:12;}
+
+function showExplosion(x,y,size,type){
+  const arena=document.getElementById('arena');
+  const div=document.createElement('div');
+  div.className='explosion';
+  const colors={work:'rgba(248,113,113,.8)',anxiety:'rgba(251,146,60,.8)',anger:'rgba(244,114,182,.8)',sadness:'rgba(96,165,250,.8)',chaos:'rgba(167,139,250,.8)',bonus:'rgba(52,211,153,.8)'};
+  div.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:${colors[type]||'rgba(255,255,255,.6)'};`;
+  arena.appendChild(div);
+  setTimeout(()=>div.remove(),500);
+}
+
+function showScorePop(x,y,text,type){
+  const arena=document.getElementById('arena');
+  const div=document.createElement('div');
+  div.className='score-pop';
+  const colors={work:'#f87171',anxiety:'#fb923c',anger:'#f472b6',sadness:'#60a5fa',chaos:'#a78bfa',bonus:'#34d399'};
+  div.style.cssText=`left:${x}px;top:${y}px;color:${colors[type]||'#fff'};text-shadow:0 2px 8px rgba(0,0,0,.5);`;
+  div.textContent=text;
+  arena.appendChild(div);
+  setTimeout(()=>div.remove(),800);
+}
+
+function showZenCloud(x,y,size){
+  const arena=document.getElementById('arena');
+  const div=document.createElement('div');
+  div.className='zen-cloud';
+  div.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;`;
+  arena.appendChild(div);
+  setTimeout(()=>div.remove(),2000);
+}
+
+// ═══════════════════════════════════
+//   GAME LOOP
+// ═══════════════════════════════════
+function updateBubbles(){
+  if(!state.running||state.paused)return;
+  const arena=document.getElementById('arena');
+  const H=arena.clientHeight, W=arena.clientWidth;
+
+  state.bubbles=state.bubbles.filter(b=>{
+    if(!b.alive)return false;
+    b.curY+=b.vy*(1/60);
+    b.wobble+=b.wobbleDir*b.wobbleSpeed*(1/60)*50;
+    if(Math.abs(b.wobble)>b.maxWobble)b.wobbleDir*=-1;
+    b.curX=Math.max(0,Math.min(W-b.size,b.curX+b.wobble*0.01));
+    b.el.style.top=b.curY+'px';
+    b.el.style.left=b.curX+'px';
+
+    if(b.curY>H+20){
+      b.alive=false;
+      b.el.remove();
+      missedBubble(b);
+      return false;
+    }
+    return true;
+  });
+}
+
+function startGameLoop(){
+  if(state.gameLoop)clearInterval(state.gameLoop);
+  state.gameLoop=setInterval(updateBubbles,16);
+}
+
+function startSpawnLoop(){
+  if(state.spawnLoop)clearInterval(state.spawnLoop);
+  const interval=Math.max(500,1400-state.level*80);
+  state.spawnLoop=setInterval(()=>{
+    if(state.running&&!state.paused)spawnBubble();
+  },interval);
+}
+
+function startTimerLoop(){
+  if(state.timerLoop)clearInterval(state.timerLoop);
+  state.timerLoop=setInterval(()=>{
+    if(!state.running||state.paused)return;
+    state.timer--;
+    const el=document.getElementById('timerDisplay');
+    el.textContent=state.timer;
+    if(state.timer<=10)el.style.animation='timerWarn .5s ease-in-out infinite';
+    else el.style.animation='';
+    if(state.timer<=0)endGame(false);
+  },1000);
+}
+
+function startLevelLoop(){
+  if(state.levelLoop)clearInterval(state.levelLoop);
+  state.levelLoop=setInterval(()=>{
+    if(!state.running||state.paused)return;
+    state.level++;
+    document.getElementById('levelDisplay').textContent=state.level;
+    startSpawnLoop();
+    showLevelToast();
+  },15000);
+}
+
+function showLevelToast(){
+  const t=document.getElementById('levelToast');
+  t.textContent='LEVEL '+state.level+' — FASTER!';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+function updateHUD(){
+  document.getElementById('scoreDisplay').textContent=state.score.toLocaleString();
+  if(state.combo>=5){
+    document.getElementById('comboDisplay').textContent=`${state.combo}x COMBO!`;
+  } else {
+    document.getElementById('comboDisplay').textContent='';
+  }
+}
+
+function updateStressBar(){
+  document.getElementById('stressFill').style.width=state.stress+'%';
+}
+
+// ═══════════════════════════════════
+//   START / END
+// ═══════════════════════════════════
+function startGame(){
+  state={...state,
+    score:0,level:1,timer:60,stress:0,
+    combo:0,maxCombo:0,popped:0,missed:0,bonusCaught:0,
+    typeCounts:{work:0,anxiety:0,anger:0,sadness:0,chaos:0,bonus:0},
+    multiplier:1,running:true,paused:false,bubbles:[]
+  };
+  document.getElementById('arena').innerHTML='';
+  updateHUD();updateStressBar();
+  document.getElementById('scoreDisplay').textContent='0';
+  document.getElementById('levelDisplay').textContent='1';
+  document.getElementById('timerDisplay').textContent='60';
+  document.getElementById('timerDisplay').style.animation='';
+  document.getElementById('comboDisplay').textContent='';
+  showScreen('gameScreen');
+  startGameLoop();
+  startSpawnLoop();
+  startTimerLoop();
+  startLevelLoop();
+}
+
+function endGame(stressedOut){
+  state.running=false;
+  clearInterval(state.gameLoop);
+  clearInterval(state.timerLoop);
+  clearInterval(state.spawnLoop);
+  clearInterval(state.levelLoop);
+
+  document.getElementById('arena').innerHTML='';
+
+  setTimeout(()=>showResults(stressedOut),300);
+}
+
+// ═══════════════════════════════════
+//   RESULTS
+// ═══════════════════════════════════
+const grades=[
+  {min:0,grade:'C',label:'Keep Smashing',color:'#94a3b8'},
+  {min:200,grade:'B',label:'Stress Reducer',color:'#60a5fa'},
+  {min:500,grade:'A',label:'Zen Warrior',color:'#a78bfa'},
+  {min:900,grade:'S',label:'ZEN MASTER',color:'#34d399'},
+  {min:1500,grade:'S+',label:'TRANSCENDENT',color:'#fbbf24'},
+];
+const motivations={
+  work:"You smashed those deadlines like a pro! Remember: progress, not perfection. You're doing better than you think.",
+  relationships:"Popping those emotional bubbles takes courage. Healthy connections start with taking care of yourself first.",
+  health:"Your body keeps the score — and so does ZEN SMASH. Small daily wins compound into massive resilience.",
+  money:"Financial stress is real, but so is your ability to handle it. One bubble at a time, one step at a time.",
+  everything:"When everything feels overwhelming, remember: you just handled 60 seconds of pure chaos. You've got this.",
+  nothing:"Pure good vibes! You played ZEN SMASH just for fun — that IS stress relief. Keep being you.",
+  default:"Every bubble you popped was a small act of self-care. Be proud — you showed up for yourself today.",
+};
+
+function showResults(stressedOut){
+  const sc=state.score;
+  const g=grades.slice().reverse().find(g=>sc>=g.min)||grades[0];
+
+  const titleEl=document.getElementById('resultTitle');
+  const subEl=document.getElementById('resultSub');
+  titleEl.textContent=stressedOut?'STRESS WIN':'STRESS SMASHED';
+  titleEl.style.background=stressedOut?'linear-gradient(135deg,#f87171,#fb923c)':'linear-gradient(135deg,#a78bfa,#60a5fa,#34d399)';
+  titleEl.style.webkitBackgroundClip='text';titleEl.style.webkitTextFillColor='transparent';titleEl.style.backgroundClip='text';
+  subEl.textContent=stressedOut?'The stress got you — but you fought hard!':'Session complete · '+state.level+' levels reached';
+
+  document.getElementById('resultGrade').textContent=g.grade;
+  document.getElementById('resultGrade').style.color=g.color;
+  document.getElementById('resultGradeLabel').textContent=g.label;
+
+  // Stats
+  const accuracy=state.popped+state.missed>0?Math.round(state.popped/(state.popped+state.missed)*100):0;
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-card-val" style="color:#a78bfa">${sc.toLocaleString()}</div><div class="stat-card-lbl">Final Score</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:#60a5fa">${state.popped}</div><div class="stat-card-lbl">Bubbles Popped</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:#fbbf24">${state.maxCombo}x</div><div class="stat-card-lbl">Best Combo</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:#34d399">${state.bonusCaught}</div><div class="stat-card-lbl">Zen Gems</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:#f87171">${state.missed}</div><div class="stat-card-lbl">Missed</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:#fb923c">${accuracy}%</div><div class="stat-card-lbl">Accuracy</div></div>
+  `;
+
+  // Breakdown bars
+  const typeInfo={work:{label:'Work',color:'#f87171'},anxiety:{label:'Anxiety',color:'#fb923c'},anger:{label:'Anger',color:'#f472b6'},sadness:{label:'Sadness',color:'#60a5fa'},chaos:{label:'Chaos',color:'#a78bfa'}};
+  const total=Math.max(1,state.popped);
+  let barsHtml='';
+  Object.entries(typeInfo).forEach(([k,info])=>{
+    const cnt=state.typeCounts[k]||0;
+    const pct=Math.round(cnt/total*100);
+    barsHtml+=`<div class="report-bar-item">
+      <div class="report-bar-label">${info.label}</div>
+      <div class="report-bar-track"><div class="report-bar-fill" style="width:0%;background:${info.color}" data-pct="${pct}"></div></div>
+      <div class="report-bar-count">${cnt}</div>
+    </div>`;
+  });
+  document.getElementById('reportBars').innerHTML=barsHtml;
+
+  // Motivation
+  const mood=state.selectedMood||'default';
+  document.getElementById('motivationMsg').textContent='"'+(motivations[mood]||motivations.default)+'"';
+
+  showScreen('resultsScreen');
+
+  // Animate bars after paint
+  setTimeout(()=>{
+    document.querySelectorAll('.report-bar-fill').forEach(el=>{
+      el.style.width=el.dataset.pct+'%';
+    });
+    document.getElementById('resultGrade').style.animation='gradePop .5s cubic-bezier(.175,.885,.32,1.275) both';
+  },200);
+}
+
+// ═══════════════════════════════════
+//   EVENT WIRING
+// ═══════════════════════════════════
+document.getElementById('startBtn').addEventListener('click',startGame);
+document.getElementById('playAgainBtn').addEventListener('click',startGame);
+document.getElementById('menuBtn').addEventListener('click',()=>{showScreen('introScreen');});
+document.getElementById('resumeBtn').addEventListener('click',()=>{state.paused=false;document.getElementById('pauseOverlay').classList.remove('visible');});
+document.getElementById('quitBtn').addEventListener('click',()=>{state.paused=false;document.getElementById('pauseOverlay').classList.remove('visible');endGame(false);});
+
+// Pause on Escape / P key
+document.addEventListener('keydown',e=>{
+  if((e.key==='Escape'||e.key==='p'||e.key==='P')&&state.running){
+    state.paused=!state.paused;
+    document.getElementById('pauseOverlay').classList.toggle('visible',state.paused);
+  }
+});
+
+// Prevent scroll on spacebar
+document.addEventListener('keydown',e=>{if(e.key===' ')e.preventDefault();});
+</script>
+</body>
+</html>
